@@ -1,0 +1,25 @@
+from flask import Flask, request, jsonify
+import pickle
+import numpy as np
+
+with open('modelo_previsao.pkl', 'rb') as f:
+    model = pickle.load(f)
+
+app = Flask(__name__)
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+        data = request.get_json()
+        
+        input_value = np.array(data['input_value']).reshape(-1, 1)
+        
+        prediction = model.predict(input_value)
+        
+        return jsonify({'prediction': prediction.tolist()})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+if __name__ == '__main__':
+    app.run(debug=True)
