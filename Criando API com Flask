@@ -2,24 +2,42 @@ from flask import Flask, request, jsonify
 import pickle
 import numpy as np
 
-with open('modelo_previsao.pkl', 'rb') as f:
+# Carregar o modelo treinado
+with open('modelo_bicicletas.pkl', 'rb') as f:
     model = pickle.load(f)
 
 app = Flask(__name__)
 
+# Endpoint para fazer previsões
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        # Obter os dados enviados no corpo da requisição
         data = request.get_json()
         
-        input_value = np.array(data['input_value']).reshape(-1, 1)
+        # Extrair os valores de entrada (temperatura, umidade, hora)
+        temperatura = data['temperatura']
+        umidade = data['umidade']
+        hora = data['hora']
         
-        prediction = model.predict(input_value)
+        # Organizar esses valores em um array para o modelo
+        input_data = np.array([[temperatura, umidade, hora]])
         
-        return jsonify({'prediction': prediction.tolist()})
+        # Fazer a previsão
+        prediction = model.predict(input_data)
+        
+        # Retornar a previsão (número de bicicletas alugadas) em formato JSON
+        return jsonify({'bicicletas_alugadas': prediction.tolist()[0]})
     
     except Exception as e:
         return jsonify({'error': str(e)})
 
+# Endpoint para verificar status da API
+@app.route('/status', methods=['GET'])
+def status():
+    return jsonify({'status': 'API funcionando corretamente!'})
+
+# Rodar o servidor Flask
 if __name__ == '__main__':
     app.run(debug=True)
+
